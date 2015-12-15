@@ -47,8 +47,16 @@ var app = function () {
     return self;
 };
 
+var getSource = function () {
+    var match  = RegExp('[?]([^=&]+)=*([^&]*)').exec(window.location.search);
+    return {
+      service: match && decodeURIComponent(match[1].replace(/\+/g, ' ')),
+      path:    match && match[2]
+    };
+};
+
 var getParameterByName = function (name) {
-    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    var match = RegExp('&' + name + '=([^&]*)').exec(window.location.search);
     return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 };
 
@@ -56,8 +64,8 @@ var getParameterByName = function (name) {
 $(function () {
     var viewer = app();
     // how are we getting the worksheet data?
-    var source = getParameterByName("source");
-    switch (source) {
+    var source = getSource(); 
+    switch (source.service) {
         case "github":
             var user = getParameterByName("user");
             var repo = getParameterByName("repo");
@@ -82,22 +90,18 @@ $(function () {
                 viewer.start(data, "https://bitbucket.org/" + user + "/" + repo, path, "Bitbucket");
             });
             return;
-        case "ipfs":
-            var hash = getParameterByName("hash");
-            getFromIpfs(hash, function(data) {
-                viewer.start(data, "http://gateway.ipfs.io/ipfs/" + hash, hash, "IPFS");
-            });
+        case "path":
+            var data = $.get(".." + source.path);
+            viewer.start(data, "http://gateway.ipfs.io" + path, path, "IPFS");
             return;
-        case "ipns":
-            var hash = getParameterByName("hash");
-            getFromIpns(hash, function(data) {
-                viewer.start(data, "http://gateway.ipfs.io/ipns/" + hash, hash, "IPFS");
-            });
+        case "url":
+            var data = $.get(source.path);
+            viewer.start(data, source.path, source.path, "URL");
             return;
         case "test":
             // so you can test without exhausting the github API limit
             $.get('/test.clj').success(function (data) {
-                viewer.start(data, "http://gorilla-repl.org/", "test.clj", source);
+                viewer.start(data, "http://gorilla-repl.org/", "test.clj", "Test");
             });
     }
 });
