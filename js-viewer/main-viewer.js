@@ -91,12 +91,14 @@ $(function () {
             });
             return;
         case "path":
-            var data = $.get(".." + source.path);
-            viewer.start(data, "http://gateway.ipfs.io" + path, path, "IPFS");
+            $.get("../.." + source.path, function (data) {
+                viewer.start(data, "http://gateway.ipfs.io" + source.path, source.path, "IPFS");
+            });
             return;
         case "url":
-            var data = $.get(source.path);
-            viewer.start(data, source.path, source.path, "URL");
+            $.get(source.path, function (data) {
+                viewer.start(data, source.path, source.path, "URL");
+            });
             return;
         case "test":
             // so you can test without exhausting the github API limit
